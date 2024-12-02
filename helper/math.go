@@ -25,6 +25,13 @@ func LeastCommonMultiple(vals ...int64) int64 {
 	return result
 }
 
+func Abs[T Number](val T) T {
+	if val < 0 {
+		return -val
+	}
+	return val
+}
+
 func Min[T Ordered](values ...T) T {
 	min := values[0]
 	for i := 1; i < len(values); i++ {

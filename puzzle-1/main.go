@@ -5,57 +5,49 @@ package main
 import (
 	"aoc/helper"
 	"fmt"
-	"strings"
+	"regexp"
+	"sort"
+	"strconv"
 )
 
 func main() {
 	lines := helper.ReadLines("input.txt")
 
-	calibrationValues1 := getCalibrationValues(lines, map[string]int{"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9})
-	solution1 := helper.SumAll[int](calibrationValues1)
+	pattern := regexp.MustCompile(`(\d+)\s+(\d+)`)
+	numbersL := make([]int, 0)
+	numbersR := make([]int, 0)
+	for _, line := range lines {
+		if m := pattern.FindStringSubmatch(line); len(m) == 3 {
+			numL, _ := strconv.ParseInt(m[1], 10, 32)
+			numR, _ := strconv.ParseInt(m[2], 10, 32)
+			numbersL = append(numbersL, int(numL))
+			numbersR = append(numbersR, int(numR))
+		}
+	}
 
-	calibrationValues2 := getCalibrationValues(lines, map[string]int{"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9,
-		"one":   1,
-		"two":   2,
-		"three": 3,
-		"four":  4,
-		"five":  5,
-		"six":   6,
-		"seven": 7,
-		"eight": 8,
-		"nine":  9,
-	})
-	solution2 := helper.SumAll[int](calibrationValues2)
+	sort.Ints(numbersL)
+	sort.Ints(numbersR)
 
+	solution1 := sumDistances(numbersL, numbersR)
 	fmt.Println("-> part 1:", solution1)
+
+	rightCounts := make(map[int]int)
+	for _, numR := range numbersR {
+		rightCounts[numR] = rightCounts[numR] + 1
+	}
+
+	var solution2 int
+	for _, num := range numbersL {
+		countR := rightCounts[num]
+		solution2 += num * countR
+	}
 	fmt.Println("-> part 2:", solution2)
 }
 
-func getCalibrationValues(lines []string, tokenMappings map[string]int) []int {
-	calibrationValues := make([]int, 0, len(lines))
-	for _, line := range lines {
-		if len(line) > 0 {
-			tokens := tokenize(line, tokenMappings)
-			if len(tokens) > 0 {
-				val := 10*tokens[0] + tokens[len(tokens)-1]
-				calibrationValues = append(calibrationValues, val)
-			}
-		}
+func sumDistances(numbers1, numbers2 []int) int {
+	var sum int
+	for i := range numbers1 {
+		sum += helper.Abs(numbers1[i] - numbers2[i])
 	}
-	return calibrationValues
-}
-
-func tokenize(line string, tokenMappings map[string]int) []int {
-	runes := []rune(line)
-	tokens := make([]int, 0)
-	for i := 0; i < len(runes); i++ {
-		remainder := string(runes[i:])
-		for t, v := range tokenMappings {
-			if strings.HasPrefix(remainder, t) {
-				tokens = append(tokens, v)
-				break
-			}
-		}
-	}
-	return tokens
+	return sum
 }
