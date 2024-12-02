@@ -13,6 +13,16 @@ import (
 func main() {
 	lines := helper.ReadLines("input.txt")
 
+	numbersL, numbersR := parseSortedNumberGroups(lines)
+
+	solution1 := sumDistances(numbersL, numbersR)
+	fmt.Println("-> part 1:", solution1)
+
+	solution2 := computeSimilarity(numbersL, numbersR)
+	fmt.Println("-> part 2:", solution2)
+}
+
+func parseSortedNumberGroups(lines []string) ([]int, []int) {
 	pattern := regexp.MustCompile(`(\d+)\s+(\d+)`)
 	numbersL := make([]int, 0)
 	numbersR := make([]int, 0)
@@ -28,26 +38,28 @@ func main() {
 	sort.Ints(numbersL)
 	sort.Ints(numbersR)
 
-	solution1 := sumDistances(numbersL, numbersR)
-	fmt.Println("-> part 1:", solution1)
+	return numbersL, numbersR
+}
 
+func sumDistances(numbersL, numbersR []int) int {
+	var sum int
+	for i := range numbersL {
+		sum += helper.Abs(numbersL[i] - numbersR[i])
+	}
+	return sum
+}
+
+func computeSimilarity(numbersL, numbersR []int) int {
 	rightCounts := make(map[int]int)
 	for _, numR := range numbersR {
 		rightCounts[numR] = rightCounts[numR] + 1
 	}
 
-	var solution2 int
+	var similarity int
 	for _, num := range numbersL {
 		countR := rightCounts[num]
-		solution2 += num * countR
+		similarity += num * countR
 	}
-	fmt.Println("-> part 2:", solution2)
-}
 
-func sumDistances(numbers1, numbers2 []int) int {
-	var sum int
-	for i := range numbers1 {
-		sum += helper.Abs(numbers1[i] - numbers2[i])
-	}
-	return sum
+	return similarity
 }
