@@ -2,6 +2,7 @@ package helper
 
 import (
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -33,15 +34,13 @@ func ReadString(file string) string {
 	return string(data)
 }
 
-func SplitAndParseInts(str string, separator string) []int {
-	parts := strings.Split(str, separator)
-	ints := make([]int, 0, len(parts))
-	for _, p := range parts {
-		if len(p) > 0 {
-			num, err := strconv.Atoi(p)
-			ExitOnError(err)
-			ints = append(ints, num)
-		}
+func ParseInts(str string) []int {
+	pattern := regexp.MustCompile(`\d+`)
+
+	matches := pattern.FindAllString(str, -1)
+	ints := make([]int, len(matches))
+	for i := range matches {
+		ints[i], _ = strconv.Atoi(matches[i])
 	}
 	return ints
 }

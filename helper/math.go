@@ -32,6 +32,20 @@ func Abs[T Number](val T) T {
 	return val
 }
 
+func Sign[T Number](val T) int {
+	if val < 0 {
+		return -1
+	}
+	if val > 0 {
+		return 1
+	}
+	return 0
+}
+
+func SignBit[T Number](val T) bool {
+	return val >= 0
+}
+
 func Min[T Ordered](values ...T) T {
 	min := values[0]
 	for i := 1; i < len(values); i++ {
