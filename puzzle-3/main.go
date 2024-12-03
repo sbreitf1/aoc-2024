@@ -32,8 +32,8 @@ type Instruction struct {
 }
 
 func parseInstructions(str string) []Instruction {
-	patternInstruction := regexp.MustCompile(`(mul|do|don't)\((|\d+,\d+)\)`)
-	patternMulArgs := regexp.MustCompile(`^(\d+),(\d+)$`)
+	patternInstruction := regexp.MustCompile(`(mul|do|don't)\((|\d{1,3},\d{1,3})\)`)
+	patternMulArgs := regexp.MustCompile(`^(\d{1,3}),(\d{1,3})$`)
 	matches := patternInstruction.FindAllStringSubmatch(str, -1)
 	instructions := make([]Instruction, 0)
 	for _, m := range matches {
