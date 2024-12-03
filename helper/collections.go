@@ -20,6 +20,13 @@ func ReverseSlice[T any](arr []T) {
 	}
 }
 
+func RemoveIndex[T any](src []T, removeIndex int) []T {
+	dst := make([]T, len(src)-1)
+	copy(dst[:removeIndex], src[:removeIndex])
+	copy(dst[removeIndex:], src[removeIndex+1:])
+	return dst
+}
+
 func CloneMap[K comparable, V any](src map[K]V) map[K]V {
 	dst := make(map[K]V, len(src))
 	for k, v := range src {

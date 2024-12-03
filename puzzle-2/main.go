@@ -67,12 +67,7 @@ func countDampenedSafeLevels(levels [][]int) int {
 
 func isSafeWithDampening(level []int) bool {
 	for ignoredIndex := range level {
-		dampenedLevel := make([]int, 0, len(level)-1)
-		for i := range level {
-			if i != ignoredIndex {
-				dampenedLevel = append(dampenedLevel, level[i])
-			}
-		}
+		dampenedLevel := helper.RemoveIndex(level, ignoredIndex)
 		if isSafe(dampenedLevel) {
 			return true
 		}
