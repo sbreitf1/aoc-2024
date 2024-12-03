@@ -1,5 +1,7 @@
 package helper
 
+import "strconv"
+
 type Integer interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
 }
@@ -80,4 +82,10 @@ func SumAll[OUT, T Number](values []T) OUT {
 		sum += OUT(val)
 	}
 	return sum
+}
+
+func ParseInt[T Integer](str string) T {
+	val, err := strconv.ParseInt(str, 10, 64)
+	ExitOnError(err, "failed to parse int from %q", str)
+	return T(val)
 }

@@ -7,10 +7,14 @@ import (
 	"strings"
 )
 
-func ReadLines(file string) []string {
+func ReadString(file string) string {
 	data, err := os.ReadFile(file)
 	ExitOnError(err)
-	lines := strings.Split(string(data), "\n")
+	return string(data)
+}
+
+func ReadLines(file string) []string {
+	lines := strings.Split(ReadString(file), "\n")
 	for i := range lines {
 		lines[i] = strings.Trim(lines[i], "\r")
 	}
@@ -26,12 +30,6 @@ func ReadNonEmptyLines(file string) []string {
 		}
 	}
 	return nonEmptyLines
-}
-
-func ReadString(file string) string {
-	data, err := os.ReadFile(file)
-	ExitOnError(err)
-	return string(data)
 }
 
 func ParseInts(str string) []int {
