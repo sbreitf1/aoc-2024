@@ -5,6 +5,8 @@ package main
 import (
 	"aoc/helper"
 	"fmt"
+	"sync"
+	"sync/atomic"
 )
 
 func main() {
@@ -23,6 +25,14 @@ type Area struct {
 	fields   [][]rune
 	guardPos helper.Vec2D[int]
 	guardDir helper.Vec2D[int]
+}
+
+func (area Area) Clone() Area {
+	return Area{
+		fields:   helper.CloneSlice2D(area.fields),
+		guardPos: area.guardPos,
+		guardDir: area.guardDir,
+	}
 }
 
 func (area Area) IsObstacle(p helper.Vec2D[int]) bool {
@@ -81,17 +91,24 @@ func GetDistinctPos(path []helper.Vec2D[int]) []helper.Vec2D[int] {
 func (area Area) CountLoops(escapePath []helper.Vec2D[int]) int {
 	candidates := GetDistinctPos(escapePath)
 
-	var count int
+	var wg sync.WaitGroup
+	var count int32
 	for _, p := range candidates {
-		if area.fields[p.Y][p.X] == '.' && p != area.guardPos {
-			area.fields[p.Y][p.X] = '#'
-			if area.HasLoop() {
-				count++
+		wg.Add(1)
+		go func(p helper.Vec2D[int]) {
+			defer wg.Done()
+
+			if area.fields[p.Y][p.X] == '.' && p != area.guardPos {
+				tmpArea := area.Clone()
+				tmpArea.fields[p.Y][p.X] = '#'
+				if tmpArea.HasLoop() {
+					atomic.AddInt32(&count, 1)
+				}
 			}
-			area.fields[p.Y][p.X] = '.'
-		}
+		}(p)
 	}
-	return count
+	wg.Wait()
+	return int(count)
 }
 
 func (area Area) HasLoop() bool {

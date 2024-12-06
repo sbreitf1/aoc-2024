@@ -35,6 +35,20 @@ func CloneMap[K comparable, V any](src map[K]V) map[K]V {
 	return dst
 }
 
+func CloneSlice[T any](src []T) []T {
+	dst := make([]T, len(src))
+	copy(dst, src)
+	return dst
+}
+
+func CloneSlice2D[T any](src [][]T) [][]T {
+	dst := make([][]T, len(src))
+	for i := range src {
+		dst[i] = CloneSlice(src[i])
+	}
+	return dst
+}
+
 func IterateMapInKeyOrder[K Ordered, V any](m map[K]V, f func(k K, v V)) {
 	keys := GetKeySlice(m)
 	sort.Slice(keys, func(i, j int) bool {
