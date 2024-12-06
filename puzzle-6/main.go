@@ -16,10 +16,7 @@ func main() {
 	fmt.Println("-> part 1:", solution1)
 
 	solution2 := area.CountLoops(escapePath)
-	fmt.Println("-> part 2:", solution2, "(possibly wrong!)")
-	// is NOT 1564 !
-	// and NOT 1563 !
-	// and NOT 1565 !
+	fmt.Println("-> part 2:", solution2)
 }
 
 type Area struct {
@@ -60,8 +57,9 @@ func (area Area) GetEscapePath() []helper.Vec2D[int] {
 			break
 		}
 
-		if area.IsObstacle(newPos) {
+		for area.IsObstacle(newPos) {
 			dir = dir.RotCW()
+			newPos = path[len(path)-1].Add(dir)
 		}
 		path = append(path, path[len(path)-1].Add(dir))
 	}
@@ -117,8 +115,9 @@ func (area Area) HasLoop() bool {
 			return false
 		}
 
-		if area.IsObstacle(newPos) {
+		for area.IsObstacle(newPos) {
 			guardState.Dir = guardState.Dir.RotCW()
+			newPos = guardState.Pos.Add(guardState.Dir)
 		}
 		guardState.Pos = guardState.Pos.Add(guardState.Dir)
 	}
