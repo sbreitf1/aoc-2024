@@ -32,13 +32,14 @@ func ReadNonEmptyLines(file string) []string {
 	return nonEmptyLines
 }
 
-func ParseInts(str string) []int {
+func ParseInts[T Integer](str string) []T {
 	pattern := regexp.MustCompile(`\d+`)
 
 	matches := pattern.FindAllString(str, -1)
-	ints := make([]int, len(matches))
+	ints := make([]T, len(matches))
 	for i := range matches {
-		ints[i], _ = strconv.Atoi(matches[i])
+		val, _ := strconv.ParseInt(matches[i], 10, 64)
+		ints[i] = T(val)
 	}
 	return ints
 }
