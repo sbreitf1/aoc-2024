@@ -5,7 +5,6 @@ package main
 import (
 	"aoc/helper"
 	"fmt"
-	"math"
 	"strconv"
 )
 
@@ -50,40 +49,36 @@ func sumSolvableCalibrations(calibrations []Calibration, allowedOperators []rune
 }
 
 func (c Calibration) IsSolvable(allowedOperators []rune) bool {
-	ops := prepareOperatorConstellations(len(c.Values)-1, allowedOperators)
-	for _, op := range ops {
-		if val, ok := c.Compute(op); ok && val == c.TestValue {
+	return c.isSolvable(c.Values[0], 1, allowedOperators)
+}
+
+func (c Calibration) isSolvable(currentVal int64, pos int, allowedOperators []rune) bool {
+	if pos >= len(c.Values) {
+		return currentVal == c.TestValue
+	}
+	if currentVal > c.TestValue {
+		return false
+	}
+
+	for _, op := range allowedOperators {
+		nextVal := applyOperator(op, currentVal, c.Values[pos])
+		if c.isSolvable(nextVal, pos+1, allowedOperators) {
 			return true
 		}
 	}
 	return false
 }
 
-func (c Calibration) Compute(ops []rune) (int64, bool) {
-	val := c.Values[0]
-	for i := range ops {
-		if val > c.TestValue {
-			return 0, false
-		}
-
-		if ops[i] == '+' {
-			val += c.Values[i+1]
-		} else if ops[i] == '*' {
-			val *= c.Values[i+1]
-		} else if ops[i] == '|' {
-			val, _ = strconv.ParseInt(fmt.Sprintf("%v%v", val, c.Values[i+1]), 10, 64)
-		}
+func applyOperator(op rune, val1, val2 int64) int64 {
+	switch op {
+	case '+':
+		return val1 + val2
+	case '*':
+		return val1 * val2
+	case '|':
+		val, _ := strconv.ParseInt(fmt.Sprintf("%v%v", val1, val2), 10, 64)
+		return val
+	default:
+		panic(fmt.Sprintf("unexpected operator %q", op))
 	}
-	return val, true
-}
-
-func prepareOperatorConstellations(count int, allowedOperators []rune) [][]rune {
-	ops := make([][]rune, int(math.Pow(float64(len(allowedOperators)), float64(count))))
-	for i := range ops {
-		ops[i] = make([]rune, count)
-		for j := 0; j < count; j++ {
-			ops[i][j] = allowedOperators[(i/int(math.Pow(float64(len(allowedOperators)), float64(j))))%len(allowedOperators)]
-		}
-	}
-	return ops
 }
