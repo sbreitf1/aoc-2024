@@ -21,7 +21,7 @@ func main() {
 func parseLevels(lines []string) [][]int {
 	levels := make([][]int, 0, len(lines))
 	for _, line := range lines {
-		levels = append(levels, helper.ParseInts[int](line))
+		levels = append(levels, helper.ExtractInts[int](line))
 	}
 	return levels
 }

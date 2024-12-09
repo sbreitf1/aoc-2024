@@ -27,7 +27,7 @@ type Calibration struct {
 func parseCalibrations(lines []string) []Calibration {
 	calibrations := make([]Calibration, 0, len(lines))
 	for _, l := range lines {
-		ints := helper.ParseInts[int64](l)
+		ints := helper.ExtractInts[int64](l)
 		if len(ints) >= 2 {
 			calibrations = append(calibrations, Calibration{
 				TestValue: ints[0],

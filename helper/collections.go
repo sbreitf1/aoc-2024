@@ -20,6 +20,10 @@ func ReverseSlice[T any](arr []T) {
 	}
 }
 
+func ReverseString(str string) string {
+	return string(GetReversedSlice([]rune(str)))
+}
+
 func RemoveIndex[T any](src []T, removeIndex int) []T {
 	dst := make([]T, len(src)-1)
 	copy(dst[:removeIndex], src[:removeIndex])

@@ -42,7 +42,7 @@ func parseRulesAndUpdates(lines []string) ([]Rule, []Update) {
 			})
 		}
 		if m := patternUpdate.FindStringSubmatch(line); len(m) == 1 {
-			updates = append(updates, Update(helper.ParseInts[int](m[0])))
+			updates = append(updates, Update(helper.ExtractInts[int](m[0])))
 		}
 	}
 	return rules, updates

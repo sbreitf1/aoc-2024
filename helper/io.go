@@ -32,7 +32,7 @@ func ReadNonEmptyLines(file string) []string {
 	return nonEmptyLines
 }
 
-func ParseInts[T Integer](str string) []T {
+func ExtractInts[T Integer](str string) []T {
 	pattern := regexp.MustCompile(`\d+`)
 
 	matches := pattern.FindAllString(str, -1)
