@@ -29,7 +29,7 @@ type Area struct {
 
 func (area Area) Clone() Area {
 	return Area{
-		fields:   helper.CloneSlice2D(area.fields),
+		fields:   helper.Clone(area.fields),
 		guardPos: area.guardPos,
 		guardDir: area.guardDir,
 	}

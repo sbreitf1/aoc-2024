@@ -60,8 +60,8 @@ func (d *Disk) String() string {
 
 func (d *Disk) Clone() *Disk {
 	return &Disk{
-		fileBlocks:  helper.CloneSlice(d.fileBlocks),
-		emptyBlocks: helper.CloneSlice(d.emptyBlocks),
+		fileBlocks:  helper.Clone(d.fileBlocks),
+		emptyBlocks: helper.Clone(d.emptyBlocks),
 		size:        d.size,
 	}
 }
