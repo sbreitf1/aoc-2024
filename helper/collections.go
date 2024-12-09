@@ -35,6 +35,14 @@ func CloneMap[K comparable, V any](src map[K]V) map[K]V {
 	return dst
 }
 
+func CloneMapOfSlices[K comparable, V any](src map[K][]V) map[K][]V {
+	dst := make(map[K][]V, len(src))
+	for k, v := range src {
+		dst[k] = CloneSlice[V](v)
+	}
+	return dst
+}
+
 func CloneSlice[T any](src []T) []T {
 	dst := make([]T, len(src))
 	copy(dst, src)
