@@ -73,3 +73,38 @@ func TestReverseString(t *testing.T) {
 		require.Equal(t, "hjs#üä4jh", ReverseString("hj4äü#sjh"))
 	})
 }
+
+func TestRemoveIndex(t *testing.T) {
+	t.Run("Empty", func(t *testing.T) {
+		require.Panics(t, func() { RemoveIndex([]int{}, 0) })
+	})
+	t.Run("ThenEmpty", func(t *testing.T) {
+		require.Equal(t, []int{}, RemoveIndex([]int{1}, 0))
+	})
+	t.Run("FirstElement", func(t *testing.T) {
+		require.Equal(t, []int{2, 3, 4}, RemoveIndex([]int{1, 2, 3, 4}, 0))
+	})
+	t.Run("LastElement", func(t *testing.T) {
+		require.Equal(t, []int{1, 2, 3}, RemoveIndex([]int{1, 2, 3, 4}, 3))
+	})
+	t.Run("MidElement", func(t *testing.T) {
+		require.Equal(t, []int{1, 2, 4}, RemoveIndex([]int{1, 2, 3, 4}, 2))
+	})
+	t.Run("Negative", func(t *testing.T) {
+		require.Panics(t, func() { RemoveIndex([]int{1, 2, 3, 4}, -1) })
+	})
+	t.Run("OutOfBounds", func(t *testing.T) {
+		require.Panics(t, func() { RemoveIndex([]int{1, 2, 3, 4}, 4) })
+	})
+	t.Run("UnchangedInput", func(t *testing.T) {
+		original := []int{1, 2, 3, 4}
+		require.Equal(t, []int{2, 3, 4}, RemoveIndex(original, 0))
+		require.Equal(t, []int{1, 2, 3, 4}, original)
+		require.Equal(t, []int{1, 3, 4}, RemoveIndex(original, 1))
+		require.Equal(t, []int{1, 2, 3, 4}, original)
+		require.Equal(t, []int{1, 2, 4}, RemoveIndex(original, 2))
+		require.Equal(t, []int{1, 2, 3, 4}, original)
+		require.Equal(t, []int{1, 2, 3}, RemoveIndex(original, 3))
+		require.Equal(t, []int{1, 2, 3, 4}, original)
+	})
+}
