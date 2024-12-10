@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	str := helper.ReadNonEmptyLines("example-2.txt")
+	str := helper.ReadNonEmptyLines("input.txt")
 	world := parseWorld(str)
 
 	solution1 := world.SumAllTrailheadScores()
@@ -16,7 +16,8 @@ func main() {
 }
 
 type World struct {
-	Fields [][]int
+	Width, Height int
+	Fields        [][]int
 }
 
 func parseWorld(lines []string) World {
@@ -28,11 +29,13 @@ func parseWorld(lines []string) World {
 		}
 	}
 	return World{
+		Width:  len(fields[0]),
+		Height: len(fields),
 		Fields: fields,
 	}
 }
 
-func (w World) GetAllZeroPos() []helper.Vec2D[int] {
+func (w World) GetTrailheads() []helper.Vec2D[int] {
 	zeroPos := make([]helper.Vec2D[int], 0)
 	for y := range w.Fields {
 		for x := range w.Fields[y] {
@@ -46,14 +49,36 @@ func (w World) GetAllZeroPos() []helper.Vec2D[int] {
 
 type Path []helper.Vec2D[int]
 
-func (w World) FindAllPathsFrom(start helper.Vec2D[int]) []Path {
-	return nil
+func (w World) FindAllPathsFrom(trailhead helper.Vec2D[int]) []Path {
+	return w.gatherAllPathsFrom(Path{trailhead})
+}
+
+func (w World) gatherAllPathsFrom(currentPath Path) []Path {
+	currentPos := currentPath[len(currentPath)-1]
+	currentVal := w.Fields[currentPos.Y][currentPos.X]
+	if currentVal == 9 {
+		return []Path{helper.Clone(currentPath)}
+	}
+
+	paths := make([]Path, 0)
+	nextPath := make(Path, len(currentPath)+1)
+	copy(nextPath[:len(currentPath)], currentPath)
+	for _, d := range []helper.Vec2D[int]{{X: 0, Y: -1}, {X: 1, Y: 0}, {X: 0, Y: 1}, {X: -1, Y: 0}} {
+		nextPos := currentPos.Add(d)
+		if nextPos.X >= 0 && nextPos.Y >= 0 && nextPos.X < w.Width && nextPos.Y < w.Height {
+			if w.Fields[nextPos.Y][nextPos.X] == currentVal+1 {
+				nextPath[len(nextPath)-1] = currentPos.Add(d)
+				paths = append(paths, w.gatherAllPathsFrom(nextPath)...)
+			}
+		}
+	}
+	return paths
 }
 
 func (w World) SumAllTrailheadScores() int {
-	zeroPos := w.GetAllZeroPos()
+	trailheads := w.GetTrailheads()
 	var sum int
-	for _, p := range zeroPos {
+	for _, p := range trailheads {
 		paths := w.FindAllPathsFrom(p)
 		sum += CountDistinctEndPos(paths)
 	}
