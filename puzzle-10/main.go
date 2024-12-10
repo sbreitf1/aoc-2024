@@ -13,6 +13,9 @@ func main() {
 
 	solution1 := world.SumAllTrailheadScores()
 	fmt.Println("-> part 1:", solution1)
+
+	solution2 := world.CountAllTrailheadPaths()
+	fmt.Println("-> part 2:", solution2)
 }
 
 type World struct {
@@ -91,4 +94,14 @@ func CountDistinctEndPos(paths []Path) int {
 		endPosMap[path[len(path)-1]] = true
 	}
 	return len(endPosMap)
+}
+
+func (w World) CountAllTrailheadPaths() int {
+	trailheads := w.GetTrailheads()
+	var count int
+	for _, p := range trailheads {
+		paths := w.FindAllPathsFrom(p)
+		count += len(paths)
+	}
+	return count
 }
