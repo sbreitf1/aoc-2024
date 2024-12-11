@@ -8,43 +8,58 @@ import (
 )
 
 func main() {
-	str := helper.ReadString("example-1.txt")
+	str := helper.ReadString("input.txt")
 	stones := parseStones(str)
 
-	solution1 := len(stones.Blink(25))
+	solution1 := stones.Blink(25)
 	fmt.Println("-> part 1:", solution1)
 
-	/*solution2 := len(stones.Blink(75))
-	fmt.Println("-> part 2:", solution2)*/
+	solution2 := stones.Blink(75)
+	fmt.Println("-> part 2:", solution2)
 }
 
-type Stones []int64
+type Stones []Stone
+type Stone int64
 
 func parseStones(str string) Stones {
-	return Stones(helper.ExtractInts[int64](str))
+	return Stones(helper.ExtractInts[Stone](str))
 }
 
-func (stones Stones) Blink(n int) Stones {
-	next := helper.Clone(stones)
-	//fmt.Println(next)
-	for i := 0; i < n; i++ {
-		next = next.blinkOneTime()
-		//fmt.Println(next)
-	}
-	return next
-}
-
-func (stones Stones) blinkOneTime() Stones {
-	next := make(Stones, 0, len(stones))
+func (stones Stones) Blink(n int) int64 {
+	var count int64
 	for _, s := range stones {
-		str := fmt.Sprintf("%v", s)
-		if s == 0 {
-			next = append(next, 1)
-		} else if len(str)%2 == 0 {
-			next = append(next, helper.ParseInt[int64](str[:len(str)/2]), helper.ParseInt[int64](str[len(str)/2:]))
-		} else {
-			next = append(next, s*2024)
-		}
+		count += s.Blink(n)
 	}
-	return next
+	return count
+}
+
+type CacheKey struct {
+	Stone      Stone
+	BlinkCount int
+}
+
+var cache map[CacheKey]int64 = make(map[CacheKey]int64)
+
+func (s Stone) Blink(n int) int64 {
+	if n == 0 {
+		return 1
+	}
+
+	key := CacheKey{Stone: s, BlinkCount: n}
+	if count, ok := cache[key]; ok {
+		return count
+	}
+
+	var result int64
+	if s == 0 {
+		result = Stone(1).Blink(n - 1)
+	} else if str := fmt.Sprintf("%v", s); len(str)%2 == 0 {
+		stone1 := helper.ParseInt[Stone](str[:len(str)/2])
+		stone2 := helper.ParseInt[Stone](str[len(str)/2:])
+		result = stone1.Blink(n-1) + stone2.Blink(n-1)
+	} else {
+		result = Stone(s * 2024).Blink(n - 1)
+	}
+	cache[key] = result
+	return result
 }
