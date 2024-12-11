@@ -48,6 +48,20 @@ func SignBit[T Number](val T) bool {
 	return val >= 0
 }
 
+func Digits[T Integer](val T) int {
+	if val <= 0 {
+		panic("Digits(T) not defined for negative and zero values")
+	}
+
+	n := T(10)
+	for i := 1; ; i++ {
+		if val < n {
+			return i
+		}
+		n *= 10
+	}
+}
+
 func Min[T Ordered](values ...T) T {
 	min := values[0]
 	for i := 1; i < len(values); i++ {
