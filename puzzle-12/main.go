@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	lines := helper.ReadNonEmptyLines("example-4.txt")
+	lines := helper.ReadNonEmptyLines("input.txt")
 	world := World(helper.LinesToRunes(lines))
 
 	regions := world.GetRegions()
@@ -18,7 +18,6 @@ func main() {
 
 	solution2 := SumFencePrices2(regions)
 	fmt.Println("-> part 2:", solution2)
-	// NOT 871596
 }
 
 type World [][]rune
@@ -113,62 +112,50 @@ func (r Region) FencePrice2() int {
 }
 
 func (r Region) SideCount() int {
-	topLeft := r.FindTopLeftCorner()
+	fences := r.GetFences()
 
-	p := topLeft
-	d := helper.Vec2D[int]{X: 1, Y: 0}
-
-	sideCount := 1
-
-	// assumption: the point left of p (=p+d.RotCCW) is never part of the region
-	// traverse boundary of region clockwise
-	for sideCount < 4 || p != topLeft {
-		if r[p.Add(d)] {
-			p = p.Add(d)
-			if r[p.Add(d.RotCCW())] {
-				sideCount++
-				d = d.RotCCW()
-				p = p.Add(d)
+	// ugly ugly ugly
+restart:
+	// compact fences
+	for i := range fences {
+		for j := range fences {
+			if i == j {
+				continue
 			}
 
-		} else {
-			sideCount++
-			d = d.RotCW()
-		}
-	}
-
-	return sideCount
-}
-
-func (r Region) FindTopLeftCorner() helper.Vec2D[int] {
-	min, max := r.GetMinMax()
-	for y := min.Y; y <= max.Y; y++ {
-		for x := min.X; x <= max.X; x++ {
-			p := helper.Vec2D[int]{X: x, Y: y}
-			if r[p] {
-				return p
+			if fences[i].Dir == fences[j].Dir {
+				if fences[i].Pos.Add(fences[i].Dir.Mul(fences[i].Len)) == fences[j].Pos {
+					fences[i].Len += fences[j].Len
+					fences = helper.RemoveIndex(fences, j)
+					goto restart // 🤮
+				}
 			}
 		}
 	}
-	panic("not top-left corner found")
+	return len(fences)
 }
 
-func (r Region) GetMinMax() (helper.Vec2D[int], helper.Vec2D[int]) {
-	min := helper.Vec2D[int]{X: 1000000, Y: 1000000}
-	max := helper.Vec2D[int]{X: 0, Y: 0}
+type Fence struct {
+	Pos helper.Vec2D[int]
+	Dir helper.Vec2D[int]
+	Len int
+}
+
+func (r Region) GetFences() []Fence {
+	dirs := map[helper.Vec2D[int]]helper.Vec2D[int]{
+		{X: 1, Y: 0}:  {X: 0, Y: 0},
+		{X: 0, Y: 1}:  {X: 1, Y: 0},
+		{X: -1, Y: 0}: {X: -1, Y: 0},
+		{X: 0, Y: -1}: {X: 1, Y: 1},
+	}
+
+	fences := make([]Fence, 0)
 	for p := range r {
-		if p.X < min.X {
-			min.X = p.X
-		}
-		if p.X > max.X {
-			max.X = p.X
-		}
-		if p.Y < min.Y {
-			min.Y = p.Y
-		}
-		if p.Y > max.Y {
-			max.Y = p.Y
+		for d, offset := range dirs {
+			if !r[p.Add(d)] {
+				fences = append(fences, Fence{Pos: p.Add(offset), Dir: d.RotCW(), Len: 1})
+			}
 		}
 	}
-	return min, max
+	return fences
 }
