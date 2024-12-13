@@ -14,7 +14,7 @@ type PriorityQueue[P Ordered, T any] struct {
 	items priorityQueueItemList[P, T]
 }
 
-func MakePriorityQueue[P Ordered, T any]() *PriorityQueue[P, T] {
+func NewPriorityQueue[P Ordered, T any]() *PriorityQueue[P, T] {
 	return &PriorityQueue[P, T]{}
 }
 
