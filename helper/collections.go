@@ -31,6 +31,22 @@ func RemoveIndex[T any](src []T, removeIndex int) []T {
 	return dst
 }
 
+func InitSlice[T any](num int, val T) []T {
+	arr := make([]T, num)
+	for i := range arr {
+		arr[i] = Clone(val)
+	}
+	return arr
+}
+
+func InitSlice2D[T any](w, h int, val T) [][]T {
+	arr := make([][]T, h)
+	for y := range arr {
+		arr[y] = InitSlice(w, val)
+	}
+	return arr
+}
+
 func IterateMapInKeyOrder[K Ordered, V any](m map[K]V, f func(k K, v V)) {
 	keys := GetKeySlice(m)
 	sort.Slice(keys, func(i, j int) bool {

@@ -33,6 +33,18 @@ func ReadNonEmptyLines(file string) []string {
 }
 
 func ExtractInts[T Integer](str string) []T {
+	pattern := regexp.MustCompile(`-?\d+`)
+
+	matches := pattern.FindAllString(str, -1)
+	ints := make([]T, len(matches))
+	for i := range matches {
+		val, _ := strconv.ParseInt(matches[i], 10, 64)
+		ints[i] = T(val)
+	}
+	return ints
+}
+
+func ExtractPositiveInts[T Integer](str string) []T {
 	pattern := regexp.MustCompile(`\d+`)
 
 	matches := pattern.FindAllString(str, -1)
