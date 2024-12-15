@@ -1,5 +1,7 @@
 package helper
 
+import "math"
+
 type Vec2D[T Number] struct {
 	X, Y T
 }
@@ -34,6 +36,10 @@ func (p Vec2D[T]) RotCCW() Vec2D[T] {
 
 func (p Vec2D[T]) Cross(p2 Vec2D[T]) float64 {
 	return float64(p.X)*float64(p2.Y) - float64(p.Y)*float64(p2.X)
+}
+
+func (p Vec2D[T]) Dist(p2 Vec2D[T]) float64 {
+	return math.Sqrt(float64((p.X-p2.X)*(p.X-p2.X)) + float64((p.Y-p2.Y)*(p.Y-p2.Y)))
 }
 
 func (p Vec2D[T]) InBounds(min, max Vec2D[T]) bool {
