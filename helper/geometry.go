@@ -6,6 +6,10 @@ type Vec2D[T Number] struct {
 	X, Y T
 }
 
+func NewVec2D[T Number](x, y T) Vec2D[T] {
+	return Vec2D[T]{X: x, Y: y}
+}
+
 func (p Vec2D[T]) Add(p2 Vec2D[T]) Vec2D[T] {
 	return Vec2D[T]{X: p.X + p2.X, Y: p.Y + p2.Y}
 }
@@ -38,8 +42,12 @@ func (p Vec2D[T]) Cross(p2 Vec2D[T]) float64 {
 	return float64(p.X)*float64(p2.Y) - float64(p.Y)*float64(p2.X)
 }
 
+func (p Vec2D[T]) Len() float64 {
+	return math.Sqrt(float64(p.X*p.X) + float64(p.Y*p.Y))
+}
+
 func (p Vec2D[T]) Dist(p2 Vec2D[T]) float64 {
-	return math.Sqrt(float64((p.X-p2.X)*(p.X-p2.X)) + float64((p.Y-p2.Y)*(p.Y-p2.Y)))
+	return p.Sub(p2).Len()
 }
 
 func (p Vec2D[T]) InBounds(min, max Vec2D[T]) bool {
