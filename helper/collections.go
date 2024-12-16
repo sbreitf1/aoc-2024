@@ -47,6 +47,13 @@ func InitSlice2D[T any](w, h int, val T) [][]T {
 	return arr
 }
 
+func Combine[T any](arr []T, add ...T) []T {
+	dst := make([]T, len(arr)+len(add))
+	copy(dst[:len(arr)], arr)
+	copy(dst[len(arr):], add)
+	return dst
+}
+
 func IterateMapInKeyOrder[K Ordered, V any](m map[K]V, f func(k K, v V)) {
 	keys := GetKeySlice(m)
 	sort.Slice(keys, func(i, j int) bool {
@@ -87,4 +94,11 @@ func MapValues[IN, OUT any](values []IN, mapFunc func(IN) OUT) []OUT {
 		out[i] = mapFunc(values[i])
 	}
 	return out
+}
+
+func GetFirstMapKey[K comparable, V any](m map[K]V) K {
+	for k := range m {
+		return k
+	}
+	panic("map is empty")
 }
