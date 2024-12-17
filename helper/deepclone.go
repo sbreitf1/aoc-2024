@@ -43,6 +43,9 @@ func clone(src reflect.Value) reflect.Value {
 	case reflect.Map:
 		return cloneMap(src)
 
+	case reflect.Pointer:
+		return clonePointer(src)
+
 	default:
 		panic(fmt.Sprintf("clone for kind '%v' not defined", src.Type().Kind()))
 	}
@@ -75,4 +78,10 @@ func cloneMap(src reflect.Value) reflect.Value {
 		dst.SetMapIndex(it.Key(), clone(it.Value()))
 	}
 	return dst
+}
+
+func clonePointer(src reflect.Value) reflect.Value {
+	obj := reflect.New(src.Elem().Type())
+	obj.Elem().Set(clone(src.Elem()))
+	return obj
 }

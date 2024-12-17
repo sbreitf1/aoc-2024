@@ -86,6 +86,36 @@ func TestDeepCloneMapOfMaps(t *testing.T) {
 	require.Equal(t, map[int]map[int]string{1: {2: "zwei"}, 4: {5: "fünf"}, 7: {8: "acht"}}, original)
 }
 
+func TestDeepClonePointerToInt(t *testing.T) {
+	originalValue := 5
+	original := &originalValue
+	cloned := Clone(original)
+	require.Equal(t, 5, *cloned)
+	*cloned = 42
+	require.Equal(t, 42, *cloned)
+	require.Equal(t, 5, *original)
+	require.Equal(t, 5, originalValue)
+}
+
+func TestDeepClonePointerToStruct(t *testing.T) {
+	type Struct struct {
+		Int   int
+		Slice []string
+	}
+	originalValue := Struct{Int: 42, Slice: []string{"foo", "bar"}}
+	original := &originalValue
+	cloned := Clone(original)
+	require.Equal(t, Struct{Int: 42, Slice: []string{"foo", "bar"}}, *cloned)
+	cloned.Int = 1337
+	require.Equal(t, Struct{Int: 1337, Slice: []string{"foo", "bar"}}, *cloned)
+	require.Equal(t, Struct{Int: 42, Slice: []string{"foo", "bar"}}, *original)
+	require.Equal(t, Struct{Int: 42, Slice: []string{"foo", "bar"}}, originalValue)
+	cloned.Slice[0] = "test"
+	require.Equal(t, Struct{Int: 1337, Slice: []string{"test", "bar"}}, *cloned)
+	require.Equal(t, Struct{Int: 42, Slice: []string{"foo", "bar"}}, *original)
+	require.Equal(t, Struct{Int: 42, Slice: []string{"foo", "bar"}}, originalValue)
+}
+
 func TestDeepCloneNested(t *testing.T) {
 	type LeafStruct struct {
 		Int   int

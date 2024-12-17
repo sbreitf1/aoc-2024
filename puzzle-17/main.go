@@ -183,8 +183,8 @@ func findPart2(computer *Computer) int64 {
 				go func(i int) {
 					defer wg.Done()
 					val := r.Min + (d / 2) + int64(i)*d
-					tempComp := helper.Clone(*computer)
-					similarities[i] = countMatchingValuesAtEndForRange(&tempComp, val-3, val+3, targetOutput)
+					tempComp := helper.Clone(computer)
+					similarities[i] = countMatchingValuesAtEndForRange(tempComp, val-3, val+3, targetOutput)
 				}(i)
 			}
 			wg.Wait()
