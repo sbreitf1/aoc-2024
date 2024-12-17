@@ -146,92 +146,44 @@ func findPart2(computer *Computer) int64 {
 	fmt.Println("binary search between", min, "and", max)
 
 	maxBruteForceIterations := int64(1000)
-	for i := 0; i < 10; i++ {
-		if (max - min) <= maxBruteForceIterations {
-			fmt.Println("maxBruteForceIterations reached")
-			break
-		}
-
-		fmt.Println("current range is", min, "to", max, "(", max-min, ")")
-		val := (min + max) / 2
-		valOutput := computer.ResetAndExec(val)
-		if len(valOutput) < len(targetOutput) {
-			min = val
-			continue
-		}
-		if len(valOutput) > len(targetOutput) {
-			max = val
-			continue
-		}
-		matchingValueCount := countMatchingValuesAtEndForRange(computer, val-3, val+3, targetOutput)
-
-		/*matchingValueCountUp := countMatchingValuesAtEndForRange(computer, (val+max)/2-3, (val+max)/2+3, targetOutput)
-		matchingValueCountDown := countMatchingValuesAtEndForRange(computer, (min+val)/2-3, (min+val)/2+3, targetOutput)
-
-		if matchingValueCountUp > matchingValueCountDown {
-			min = val
-			continue
-		} else if matchingValueCountDown > matchingValueCountUp {
-			max = val
-			continue
-		}
-
-		for v := val - 3; v < val+3; v++ {
-			fmt.Println(computer.ResetAndExec(v))
-		}*/
-
-		fmt.Println(valOutput)
-		fmt.Println(targetOutput)
-		//fmt.Println(matchingValueCount)
-		//fmt.Println(matchingValueCount, "->", len(targetOutput)-matchingValueCount)
-
-		fmt.Println("compare", valOutput[len(valOutput)-matchingValueCount-1], "to", targetOutput[len(targetOutput)-matchingValueCount-1])
-		if valOutput[len(valOutput)-matchingValueCount-1] < targetOutput[len(targetOutput)-matchingValueCount-1] {
-			min = val
-			continue
-		} else {
-			max = val
-			continue
-		}
+	type Range struct {
+		Min, Max int64
 	}
-	/*for i := 0; i < 10; i++ {
+	queue := helper.NewPriorityQueue[int, Range]()
+	queue.Push(len(targetOutput), Range{Min: min, Max: max})
+	for i := 0; i < 50; i++ {
+		fmt.Println("current range is", min, "to", max)
+
 		if (max - min) <= maxBruteForceIterations {
-			fmt.Println("maxBruteForceIterations reached")
+			fmt.Println("max brute-force iterations reached")
 			break
 		}
 
-		fmt.Println("current range is", min, "to", max, "(", max-min, ")")
-		val := (min + max) / 2
+		similarities := make([]int, 100)
+		d := (max - min) / int64(len(similarities))
+		for i := range similarities {
+			val := min + (d / 2) + int64(i)*d
+			similarities[i] = countMatchingValuesAtEndForRange(computer, val-3, val+3, targetOutput)
+		}
 
-		for v := min; v <= max; v++ {
-			fmt.Println(computer.ResetAndExec(v))
+		rangeSize := len(similarities) / 2
+		bestPos := 0
+		bestSum := 0
+		for i := 0; i < len(similarities)-rangeSize+1; i++ {
+			var sum int
+			for j := i; j < i+rangeSize; j++ {
+				sum += similarities[j]
+			}
+			if sum > bestSum {
+				bestPos = i
+				bestSum = sum
+			}
 		}
-		os.Exit(0)
 
-		valOutput := computer.ResetAndExec(val)
-		if len(valOutput) < len(targetOutput) {
-			min = val
-			continue
-		}
-		if len(valOutput) > len(targetOutput) {
-			max = val
-			continue
-		}
-		matchingValueCount := countMatchingValuesAtEndForRange(computer, val-3, val+3, targetOutput)
-		fmt.Println(valOutput)
-		fmt.Println(targetOutput)
-		//fmt.Println(matchingValueCount)
-		//fmt.Println(matchingValueCount, "->", len(targetOutput)-matchingValueCount)
-
-		fmt.Println("compare", valOutput[len(valOutput)-matchingValueCount-1], "to", targetOutput[len(targetOutput)-matchingValueCount-1])
-		if valOutput[len(valOutput)-matchingValueCount-1] < targetOutput[len(targetOutput)-matchingValueCount-1] {
-			min = val
-			continue
-		} else {
-			max = val
-			continue
-		}
-	}*/
+		fmt.Println(similarities, "->", bestPos)
+		max = min + int64(bestPos+rangeSize)*d
+		min = min + int64(bestPos)*d
+	}
 
 	fmt.Println("brute-force search between", min, "and", max)
 	if (max - min) <= maxBruteForceIterations {
