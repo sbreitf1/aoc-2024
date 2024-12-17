@@ -7,15 +7,17 @@ import (
 	"fmt"
 	"math"
 	"slices"
+	"sort"
 	"strings"
+	"sync"
 )
 
 func main() {
 	lines := helper.ReadNonEmptyLines("input.txt")
 	computer := ParseComputer(lines)
 
-	/*solution1 := formatOutput(computer.Exec())
-	fmt.Println("-> part 1:", solution1)*/
+	solution1 := formatOutput(computer.Exec())
+	fmt.Println("-> part 1:", solution1)
 
 	solution2 := findPart2(&computer)
 	fmt.Println("-> part 2:", solution2)
@@ -143,56 +145,78 @@ func findPart2(computer *Computer) int64 {
 
 	// estimate range for binary search
 	min, max := findBinarySearchRange(computer, targetOutput)
-	fmt.Println("binary search between", min, "and", max)
 
-	maxBruteForceIterations := int64(1000)
-	type Range struct {
-		Min, Max int64
-	}
-	queue := helper.NewPriorityQueue[int, Range]()
-	queue.Push(len(targetOutput), Range{Min: min, Max: max})
-	for i := 0; i < 50; i++ {
-		fmt.Println("current range is", min, "to", max)
+	hasSolution := false
+	minSolution := int64(1000000000000000000)
 
-		if (max - min) <= maxBruteForceIterations {
-			fmt.Println("max brute-force iterations reached")
+	for {
+		foundNewSolution := false
+
+		//fmt.Println("binary search between", min, "and", max)
+
+		maxBruteForceIterations := int64(1000)
+		type Range struct {
+			Min, Max int64
+		}
+		queue := helper.NewPriorityQueue[int, Range]()
+		queue.Push(len(targetOutput), Range{Min: min, Max: max})
+		for queue.Len() > 0 {
+			r, wrongCount := queue.Pop()
+			score := len(targetOutput) - wrongCount
+
+			if (r.Max - r.Min) <= maxBruteForceIterations {
+				if solution, ok := findBruteForceSolution(computer, r.Min, r.Max, targetOutput); ok {
+					hasSolution = true
+					foundNewSolution = true
+					if solution < minSolution {
+						minSolution = solution
+					}
+				}
+				continue
+			}
+
+			similarities := make([]int, 100)
+			d := (r.Max - r.Min) / int64(len(similarities))
+			var wg sync.WaitGroup
+			for i := range similarities {
+				wg.Add(1)
+				go func(i int) {
+					defer wg.Done()
+					val := r.Min + (d / 2) + int64(i)*d
+					tempComp := helper.Clone(*computer)
+					similarities[i] = countMatchingValuesAtEndForRange(&tempComp, val-3, val+3, targetOutput)
+				}(i)
+			}
+			wg.Wait()
+			vals := helper.GetUniqueValues(similarities)
+			sort.Ints(vals)
+			minScore := score + 1
+			lookback := 5
+			if len(vals) > lookback {
+				if vals[len(vals)-lookback] >= minScore {
+					minScore = vals[len(vals)-lookback]
+				}
+			}
+
+			for i := range similarities {
+				if similarities[i] >= minScore {
+					queue.Push(len(targetOutput)-similarities[i], Range{
+						Min: r.Min + int64(i)*d,
+						Max: r.Min + int64(i+1)*d,
+					})
+				}
+			}
+		}
+
+		if !foundNewSolution {
 			break
 		}
 
-		similarities := make([]int, 100)
-		d := (max - min) / int64(len(similarities))
-		for i := range similarities {
-			val := min + (d / 2) + int64(i)*d
-			similarities[i] = countMatchingValuesAtEndForRange(computer, val-3, val+3, targetOutput)
-		}
-
-		rangeSize := len(similarities) / 2
-		bestPos := 0
-		bestSum := 0
-		for i := 0; i < len(similarities)-rangeSize+1; i++ {
-			var sum int
-			for j := i; j < i+rangeSize; j++ {
-				sum += similarities[j]
-			}
-			if sum > bestSum {
-				bestPos = i
-				bestSum = sum
-			}
-		}
-
-		fmt.Println(similarities, "->", bestPos)
-		max = min + int64(bestPos+rangeSize)*d
-		min = min + int64(bestPos)*d
+		max = minSolution
 	}
 
-	fmt.Println("brute-force search between", min, "and", max)
-	if (max - min) <= maxBruteForceIterations {
-		for val := min; val <= max; val++ {
-			output := computer.ResetAndExec(val)
-			if slices.Equal(output, targetOutput) {
-				return val
-			}
-		}
+	if hasSolution {
+		return minSolution
 	}
 
 	helper.ExitWithMessage("no solution for part 2 found!")
@@ -212,6 +236,16 @@ func findBinarySearchRange(computer *Computer, targetOutput []int64) (int64, int
 	return min, max
 }
 
+func findBruteForceSolution(computer *Computer, min, max int64, targetOutput []int64) (int64, bool) {
+	for val := min; val <= max; val++ {
+		output := computer.ResetAndExec(val)
+		if slices.Equal(output, targetOutput) {
+			return val, true
+		}
+	}
+	return -1, false
+}
+
 func countMatchingValuesAtEndForRange(computer *Computer, min, max int64, targetOutput []int64) int {
 	minMatchingValues := len(targetOutput)
 	for val := min; val <= max; val++ {
@@ -219,11 +253,6 @@ func countMatchingValuesAtEndForRange(computer *Computer, min, max int64, target
 		minMatchingValues = helper.Min(minMatchingValues, countMatchingValuesAtEnd(output, targetOutput))
 	}
 	return minMatchingValues
-}
-
-func countStableValuesAtEnd(computer *Computer, min, max int64) int {
-	cmpOutput := computer.ResetAndExec(min)
-	return countMatchingValuesAtEndForRange(computer, min+1, max, cmpOutput)
 }
 
 func countMatchingValuesAtEnd(output, targetOutput []int64) int {

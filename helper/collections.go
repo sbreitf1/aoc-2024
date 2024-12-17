@@ -102,3 +102,15 @@ func GetFirstMapKey[K comparable, V any](m map[K]V) K {
 	}
 	panic("map is empty")
 }
+
+func GetUniqueValues[T comparable](values []T) []T {
+	m := make(map[T]bool)
+	for _, v := range values {
+		m[v] = true
+	}
+	out := make([]T, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	return out
+}
