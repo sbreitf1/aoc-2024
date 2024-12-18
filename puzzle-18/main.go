@@ -4,6 +4,7 @@ package main
 
 import (
 	"aoc/helper"
+	"aoc/helper/dijkstra"
 	"fmt"
 )
 
@@ -13,7 +14,7 @@ func main() {
 	size, steps := getParams(snowflakes)
 
 	mem := NewMemory(size, snowflakes, steps)
-	path, ok := mem.FindPath(helper.NewVec2D(0, 0), helper.NewVec2D(size.X-1, size.Y-1))
+	path, _, ok := mem.FindPath(helper.NewVec2D(0, 0), helper.NewVec2D(size.X-1, size.Y-1))
 	if !ok {
 		helper.ExitWithMessage("no path found!")
 	}
@@ -71,48 +72,22 @@ func NewMemory(size helper.Vec2D[int], snowflakes []helper.Vec2D[int], steps int
 	}
 }
 
-func (mem Memory) FindPath(from, to helper.Vec2D[int]) ([]helper.Vec2D[int], bool) {
-	type Crumb struct {
-		Pos      helper.Vec2D[int]
-		IsStart  bool
-		Previous helper.Vec2D[int]
-	}
-	queue := helper.NewPriorityQueue[int, Crumb]()
-	queue.Push(0, Crumb{Pos: from, IsStart: true})
-	seen := make(map[helper.Vec2D[int]]Crumb)
-	for queue.Len() > 0 {
-		c, pathLen := queue.Pop()
-		if c.Pos == to {
-			seen[c.Pos] = c
-			path := make([]helper.Vec2D[int], 0)
-			p := c.Pos
-			for {
-				crumb := seen[p]
-				path = append(path, crumb.Pos)
-				if crumb.IsStart {
-					break
-				}
-				p = crumb.Previous
-			}
-			helper.ReverseSlice(path)
-			return path, true
-		}
-		if _, ok := seen[c.Pos]; ok {
-			continue
-		}
-		seen[c.Pos] = c
-
+func (mem Memory) FindPath(from, to helper.Vec2D[int]) ([]helper.Vec2D[int], int, bool) {
+	return dijkstra.FindPath(from, to, func(current helper.Vec2D[int], currentDist int) []dijkstra.Successor[int, helper.Vec2D[int]] {
+		successors := make([]dijkstra.Successor[int, helper.Vec2D[int]], 0)
 		for _, dir := range []helper.Vec2D[int]{helper.NewVec2D(1, 0), helper.NewVec2D(-1, 0), helper.NewVec2D(0, 1), helper.NewVec2D(0, -1)} {
-			p := c.Pos.Add(dir)
+			p := current.Add(dir)
 			if p.X >= 0 && p.Y >= 0 && p.X < mem.Width && p.Y < mem.Height {
 				if mem.Fields[p.Y][p.X] != '#' {
-					queue.Push(pathLen+1, Crumb{Pos: p, Previous: c.Pos})
+					successors = append(successors, dijkstra.Successor[int, helper.Vec2D[int]]{
+						Obj:  p,
+						Dist: currentDist + 1,
+					})
 				}
 			}
 		}
-	}
-
-	return nil, false
+		return successors
+	})
 }
 
 func findFirstSnowflakeThatBlocks(from, to helper.Vec2D[int], size helper.Vec2D[int], snowflakes []helper.Vec2D[int]) helper.Vec2D[int] {
@@ -122,7 +97,7 @@ func findFirstSnowflakeThatBlocks(from, to helper.Vec2D[int], size helper.Vec2D[
 			return val
 		}
 		mem := NewMemory(size, snowflakes, steps+1)
-		_, ok := mem.FindPath(from, to)
+		_, _, ok := mem.FindPath(from, to)
 		cache[steps] = ok
 		return ok
 	}
