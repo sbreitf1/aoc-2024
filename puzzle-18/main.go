@@ -73,27 +73,40 @@ func NewMemory(size helper.Vec2D[int], snowflakes []helper.Vec2D[int], steps int
 
 func (mem Memory) FindPath(from, to helper.Vec2D[int]) ([]helper.Vec2D[int], bool) {
 	type Crumb struct {
-		Pos  helper.Vec2D[int]
-		Path []helper.Vec2D[int]
+		Pos      helper.Vec2D[int]
+		IsStart  bool
+		Previous helper.Vec2D[int]
 	}
 	queue := helper.NewPriorityQueue[int, Crumb]()
-	queue.Push(0, Crumb{Pos: from, Path: []helper.Vec2D[int]{}})
-	seen := make(map[helper.Vec2D[int]]bool)
+	queue.Push(0, Crumb{Pos: from, IsStart: true})
+	seen := make(map[helper.Vec2D[int]]Crumb)
 	for queue.Len() > 0 {
 		c, pathLen := queue.Pop()
 		if c.Pos == to {
-			return append(c.Path, c.Pos), true
+			seen[c.Pos] = c
+			path := make([]helper.Vec2D[int], 0)
+			p := c.Pos
+			for {
+				crumb := seen[p]
+				path = append(path, crumb.Pos)
+				if crumb.IsStart {
+					break
+				}
+				p = crumb.Previous
+			}
+			helper.ReverseSlice(path)
+			return path, true
 		}
-		if seen[c.Pos] {
+		if _, ok := seen[c.Pos]; ok {
 			continue
 		}
-		seen[c.Pos] = true
+		seen[c.Pos] = c
 
 		for _, dir := range []helper.Vec2D[int]{helper.NewVec2D(1, 0), helper.NewVec2D(-1, 0), helper.NewVec2D(0, 1), helper.NewVec2D(0, -1)} {
 			p := c.Pos.Add(dir)
 			if p.X >= 0 && p.Y >= 0 && p.X < mem.Width && p.Y < mem.Height {
 				if mem.Fields[p.Y][p.X] != '#' {
-					queue.Push(pathLen+1, Crumb{Pos: p, Path: append(helper.Clone(c.Path), c.Pos)})
+					queue.Push(pathLen+1, Crumb{Pos: p, Previous: c.Pos})
 				}
 			}
 		}
