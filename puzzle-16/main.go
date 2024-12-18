@@ -4,6 +4,7 @@ package main
 
 import (
 	"aoc/helper"
+	"aoc/helper/dijkstra"
 	"fmt"
 )
 
@@ -55,59 +56,48 @@ func (l Level) Print(path []helper.Vec2D[int]) {
 }
 
 func (l Level) FindBestPathScore() int {
-	type Crumb struct {
-		Pos   helper.Vec2D[int]
-		Dir   helper.Vec2D[int]
-		Score int
-		Path  []helper.Vec2D[int]
+	type State struct {
+		Pos helper.Vec2D[int]
+		Dir helper.Vec2D[int]
 	}
-	type Key struct {
-		Pos, Dir helper.Vec2D[int]
-	}
-
-	queue := helper.NewPriorityQueue[int, Crumb]()
-	queue.Push(0, Crumb{Pos: l.Start, Dir: l.StartDir, Score: 0, Path: []helper.Vec2D[int]{l.Start}})
-	seen := make(map[Key]bool)
-	for queue.Len() > 0 {
-		c, _ := queue.Pop()
-		key := Key{Pos: c.Pos, Dir: c.Dir}
-		if seen[key] {
-			continue
-		}
-		seen[key] = true
-
-		if c.Pos == l.End {
-			return c.Score
-		}
-
-		{
-			d := c.Dir
-			p := c.Pos.Add(d)
-			if l.Fields[p.Y][p.X] != '#' {
-				next := Crumb{Pos: p, Dir: d, Score: c.Score + 1, Path: helper.Combine(c.Path, p)}
-				queue.Push(next.Score, next)
+	_, dist := dijkstra.MustFindPath(State{Pos: l.Start, Dir: l.StartDir}, State{Pos: l.End}, dijkstra.Params[int, State]{
+		Equals: func(obj1, obj2 State) bool { return obj1.Pos == obj2.Pos },
+		SuccessorGenerator: func(current State, currentDist int) []dijkstra.Successor[int, State] {
+			successors := make([]dijkstra.Successor[int, State], 0)
+			{
+				d := current.Dir
+				p := current.Pos.Add(d)
+				if l.Fields[p.Y][p.X] != '#' {
+					successors = append(successors, dijkstra.Successor[int, State]{
+						Obj:  State{Pos: p, Dir: d},
+						Dist: currentDist + 1,
+					})
+				}
 			}
-		}
-		{
-			d := c.Dir.RotCW()
-			p := c.Pos.Add(d)
-			if l.Fields[p.Y][p.X] != '#' {
-				next := Crumb{Pos: p, Dir: d, Score: c.Score + 1001, Path: helper.Combine(c.Path, p)}
-				queue.Push(next.Score, next)
+			{
+				d := current.Dir.RotCW()
+				p := current.Pos.Add(d)
+				if l.Fields[p.Y][p.X] != '#' {
+					successors = append(successors, dijkstra.Successor[int, State]{
+						Obj:  State{Pos: p, Dir: d},
+						Dist: currentDist + 1001,
+					})
+				}
 			}
-		}
-		{
-			d := c.Dir.RotCCW()
-			p := c.Pos.Add(d)
-			if l.Fields[p.Y][p.X] != '#' {
-				next := Crumb{Pos: p, Dir: d, Score: c.Score + 1001, Path: helper.Combine(c.Path, p)}
-				queue.Push(next.Score, next)
+			{
+				d := current.Dir.RotCCW()
+				p := current.Pos.Add(d)
+				if l.Fields[p.Y][p.X] != '#' {
+					successors = append(successors, dijkstra.Successor[int, State]{
+						Obj:  State{Pos: p, Dir: d},
+						Dist: currentDist + 1001,
+					})
+				}
 			}
-		}
-	}
-
-	helper.ExitWithMessage("no path found!")
-	return -1
+			return successors
+		},
+	})
+	return dist
 }
 
 func (l Level) CountAllBestPathTiles(maxScore int) int {

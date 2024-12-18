@@ -73,20 +73,22 @@ func NewMemory(size helper.Vec2D[int], snowflakes []helper.Vec2D[int], steps int
 }
 
 func (mem Memory) FindPath(from, to helper.Vec2D[int]) ([]helper.Vec2D[int], int, bool) {
-	return dijkstra.FindPath(from, to, func(current helper.Vec2D[int], currentDist int) []dijkstra.Successor[int, helper.Vec2D[int]] {
-		successors := make([]dijkstra.Successor[int, helper.Vec2D[int]], 0)
-		for _, dir := range []helper.Vec2D[int]{helper.NewVec2D(1, 0), helper.NewVec2D(-1, 0), helper.NewVec2D(0, 1), helper.NewVec2D(0, -1)} {
-			p := current.Add(dir)
-			if p.X >= 0 && p.Y >= 0 && p.X < mem.Width && p.Y < mem.Height {
-				if mem.Fields[p.Y][p.X] != '#' {
-					successors = append(successors, dijkstra.Successor[int, helper.Vec2D[int]]{
-						Obj:  p,
-						Dist: currentDist + 1,
-					})
+	return dijkstra.FindPath(from, to, dijkstra.Params[int, helper.Vec2D[int]]{
+		SuccessorGenerator: func(current helper.Vec2D[int], currentDist int) []dijkstra.Successor[int, helper.Vec2D[int]] {
+			successors := make([]dijkstra.Successor[int, helper.Vec2D[int]], 0)
+			for _, dir := range []helper.Vec2D[int]{helper.NewVec2D(1, 0), helper.NewVec2D(-1, 0), helper.NewVec2D(0, 1), helper.NewVec2D(0, -1)} {
+				p := current.Add(dir)
+				if p.X >= 0 && p.Y >= 0 && p.X < mem.Width && p.Y < mem.Height {
+					if mem.Fields[p.Y][p.X] != '#' {
+						successors = append(successors, dijkstra.Successor[int, helper.Vec2D[int]]{
+							Obj:  p,
+							Dist: currentDist + 1,
+						})
+					}
 				}
 			}
-		}
-		return successors
+			return successors
+		},
 	})
 }
 

@@ -2,23 +2,43 @@ package dijkstra
 
 import "aoc/helper"
 
-type Successor[S helper.Number, T comparable] struct {
+type Successor[D helper.Number, T comparable] struct {
 	Obj  T
-	Dist S
+	Dist D
 }
 
-func FindPath[S helper.Number, T comparable](from, to T, next func(current T, currentDist S) []Successor[S, T]) ([]T, S, bool) {
+type Params[D helper.Number, T comparable] struct {
+	SuccessorGenerator func(current T, currentDist D) []Successor[D, T]
+	Equals             func(obj1, obj2 T) bool
+}
+
+func MustFindPath[D helper.Number, T comparable](from, to T, params Params[D, T]) ([]T, D) {
+	path, dist, ok := FindPath(from, to, params)
+	if !ok {
+		helper.ExitWithMessage("no path found!")
+	}
+	return path, dist
+}
+
+func FindPath[D helper.Number, T comparable](from, to T, params Params[D, T]) ([]T, D, bool) {
+	if params.SuccessorGenerator == nil {
+		panic("params.SuccessorGenerator must be set")
+	}
+	if params.Equals == nil {
+		params.Equals = func(obj1, obj2 T) bool { return obj1 == obj2 }
+	}
+
 	type Crumb struct {
 		Obj      T
 		Previous *Crumb
 	}
 
-	queue := helper.NewPriorityQueue[S, Crumb]()
+	queue := helper.NewPriorityQueue[D, Crumb]()
 	queue.Push(0, Crumb{Obj: from, Previous: nil})
 	seen := make(map[T]Crumb)
 	for queue.Len() > 0 {
 		c, dist := queue.Pop()
-		if c.Obj == to {
+		if params.Equals(c.Obj, to) {
 			seen[c.Obj] = c
 			path := make([]T, 0)
 			cur := c.Obj
@@ -39,8 +59,7 @@ func FindPath[S helper.Number, T comparable](from, to T, next func(current T, cu
 		}
 		seen[c.Obj] = c
 
-		nextObjs := next(c.Obj, dist)
-		for _, obj := range nextObjs {
+		for _, obj := range params.SuccessorGenerator(c.Obj, dist) {
 			queue.Push(obj.Dist, Crumb{Obj: obj.Obj, Previous: &c})
 		}
 	}
