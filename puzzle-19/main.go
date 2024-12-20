@@ -5,34 +5,63 @@ package main
 import (
 	"aoc/helper"
 	"fmt"
-	"regexp"
 	"strings"
 )
 
 func main() {
 	lines := helper.ReadNonEmptyLines("input.txt")
-	pattern, designs := ParseTowelsAndDesigns(lines)
+	patterns, designs := ParseTowelsAndDesigns(lines)
 
-	solution1 := CountValidDesigns(pattern, designs)
+	solution1 := CountValidDesigns(patterns, designs)
 	fmt.Println("-> part 1:", solution1)
 
-	solution2 := 0
+	solution2 := SumAllArrangements(patterns, designs)
 	fmt.Println("-> part 2:", solution2)
 }
 
-func ParseTowelsAndDesigns(lines []string) (*regexp.Regexp, []string) {
+func ParseTowelsAndDesigns(lines []string) ([]string, []string) {
 	patterns := helper.SplitAndTrim(lines[0], ",")
-	pattern := regexp.MustCompile("^(" + strings.Join(patterns, "|") + ")+$")
 	designs := lines[1:]
-	return pattern, designs
+	return patterns, designs
 }
 
-func CountValidDesigns(pattern *regexp.Regexp, designs []string) int {
+func CountValidDesigns(patterns []string, designs []string) int {
 	var count int
 	for _, design := range designs {
-		if pattern.MatchString(design) {
+		if CountPossibleArrangements(patterns, design) > 0 {
 			count++
 		}
 	}
+	return count
+}
+
+func SumAllArrangements(patterns []string, designs []string) int {
+	var sum int
+	for _, design := range designs {
+		sum += CountPossibleArrangements(patterns, design)
+	}
+	return sum
+}
+
+var (
+	cache map[string]int = make(map[string]int)
+)
+
+func CountPossibleArrangements(patterns []string, design string) int {
+	if len(design) == 0 {
+		return 1
+	}
+
+	if val, ok := cache[design]; ok {
+		return val
+	}
+
+	var count int
+	for _, p := range patterns {
+		if strings.HasPrefix(design, p) {
+			count += CountPossibleArrangements(patterns, design[len(p):])
+		}
+	}
+	cache[design] = count
 	return count
 }
