@@ -60,9 +60,34 @@ func FindPath[D helper.Number, T comparable](from, to T, params Params[D, T]) ([
 		seen[c.Obj] = c
 
 		for _, obj := range params.SuccessorGenerator(c.Obj, dist) {
-			queue.Push(obj.Dist, Crumb{Obj: obj.Obj, Previous: &c})
+			if _, ok := seen[obj.Obj]; !ok {
+				queue.Push(obj.Dist, Crumb{Obj: obj.Obj, Previous: &c})
+			}
 		}
 	}
 
 	return nil, 0, false
+}
+
+func NewDefaultFieldSuccessorGenerator(field [][]rune, floorRunes, wallRunes []rune) func(current helper.Vec2D[int], currentDist int) []Successor[int, helper.Vec2D[int]] {
+	wallMap := make(map[rune]bool)
+	for _, r := range wallRunes {
+		wallMap[r] = true
+	}
+
+	return func(current helper.Vec2D[int], currentDist int) []Successor[int, helper.Vec2D[int]] {
+		successors := make([]Successor[int, helper.Vec2D[int]], 0)
+		for _, dir := range []helper.Vec2D[int]{helper.NewVec2D(-1, 0), helper.NewVec2D(1, 0), helper.NewVec2D(0, -1), helper.NewVec2D(0, 1)} {
+			p := current.Add(dir)
+			if p.X >= 0 && p.Y >= 0 && p.X < len(field[0]) && p.Y < len(field) {
+				if !wallMap[field[p.Y][p.X]] {
+					successors = append(successors, Successor[int, helper.Vec2D[int]]{
+						Obj:  p,
+						Dist: currentDist + 1,
+					})
+				}
+			}
+		}
+		return successors
+	}
 }
